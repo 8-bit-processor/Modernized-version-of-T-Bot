@@ -1,0 +1,278 @@
+import requests
+import json
+
+class LLMAgent:
+    """
+    An agent that communicates with a local LLM server (like llama.cpp's)
+    using an OpenAI-compatible API.
+    """
+    def __init__(self, model="llama3", base_url="http://localhost:8080"):
+        """
+        Initializes the LLM agent.
+
+        Args:
+            model (str): The name of the model to use.
+            base_url (str): The base URL of the local LLM server.
+        """
+        self.model = model
+        self.base_url = base_url
+        self.api_url = f"{self.base_url}/v1/chat/completions"
+        print(f"LLM_AGENT: Initialized for model '{self.model}' at {self.api_url}")
+
+    def generate(self, prompt: str) -> str:
+        """
+        Generates a response from the model using an OpenAI-compatible endpoint.
+
+        Args:
+            prompt (str): The prompt to send to the model.
+
+        Returns:
+            str: The generated response from the model.
+        """
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "stream": False
+        }
+        try:
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=120)
+            response.raise_for_status()
+            response_data = response.json()
+            # OpenAI-compatible response structure
+            return response_data['choices'][0]['message']['content'].strip()
+        except requests.exceptions.RequestException as e:
+            error_message = f"LLM connection error: {e}"
+            print(f"LLM_AGENT_ERROR: {error_message}")
+            if "Connection refused" in str(e):
+                return f"Error: Connection refused. Is the llama.cpp server running on port 8080?"
+            return f"Error: Could not process request with the LLM. {e}"
+        except (KeyError, IndexError) as e:
+            error_message = f"Invalid response structure from LLM server: {response.text if 'response' in locals() else 'No response'}"
+            print(f"LLM_AGENT_ERROR: {error_message} ({e})")
+            return "Error: Received an unexpected response from the LLM server."
+
+
+class Brain:
+    """
+    The main orchestrator, holding all the major components of the brain together.
+    It initializes the Thalamus, Cortex, and Hippocampus, linking them together.
+    """
+    def __init__(self):
+        print("BRAIN: Consciousness starting...")
+        # The brain's components need a reference to the central nervous system (the Brain object)
+        # to communicate with each other.
+        self.hippocampus = HippocampalCortex(self)
+        self.cortex = Cortex(self)
+        self.thalamus = Thalamus(self)
+        print("BRAIN: All components initialized and linked.")
+
+    def process_stimulus(self, stimulus: any):
+        """
+        The primary entry point for external information into the brain.
+        All stimuli are first routed through the Thalamus.
+        """
+        print(f"\nBRAIN: New stimulus received -> '{stimulus}'")
+        self.thalamus.route_stimulus(stimulus)
+
+    def reflect(self):
+        """
+        Initiates a process of introspection, managed by the Thalamus.
+        """
+        self.thalamus.reflect_on_state()
+
+
+import os
+
+class Thalamus:
+    """
+    Acts as the executive secretary and sensory gateway for the brain.
+    It directs incoming sensory information to the appropriate parts of the cortex
+    and plays a key role in regulating attention, consciousness, and sleep.
+    It also facilitates reflection by gating access to other brain structures.
+    """
+    def __init__(self, brain: Brain):
+        self.brain = brain
+
+    def route_stimulus(self, stimulus: any):
+        """
+        Gates attention by deciding where to send incoming information.
+        For this model, all primary processing is sent to the Cortex.
+        """
+        print(f"THALAMUS: Gating attention and routing stimulus '{stimulus}' to the Cortex.")
+        self.brain.cortex.process_new_input(stimulus)
+
+    def reflect_on_state(self):
+        """
+        Facilitates reflection by accessing and reporting on memory.
+        A more complex implementation could inspect the state of the Cortex.
+        """
+        print("THALAMUS: Gating attention for internal reflection.")
+        recent_memories = self.brain.hippocampus.get_all_memories()
+        print(f"THALAMUS (Reflection): Reviewing recent memories -> {recent_memories}")
+
+
+class HippocampalCortex:
+    """
+    Mimics the hippocampus, responsible for forming and retrieving memories.
+    It persists memories to a file for long-term storage.
+    """
+    def __init__(self, brain: Brain):
+        self.brain = brain
+        self.memory_dir = "homunculus"
+        self.memory_file = os.path.join(self.memory_dir, "long_term_memory.json")
+        self._memory_store = {}
+
+        if not os.path.exists(self.memory_dir):
+            os.makedirs(self.memory_dir)
+            print(f"HIPPOCAMPUS: Created memory directory at '{self.memory_dir}'.")
+
+        self._load_memories()
+        print("HIPPOCAMPUS: Memory circuits online.")
+
+    def _load_memories(self):
+        """Loads memories from the JSON file into the in-memory store."""
+        try:
+            if os.path.exists(self.memory_file) and os.path.getsize(self.memory_file) > 0:
+                with open(self.memory_file, 'r') as f:
+                    self._memory_store = json.load(f)
+                print(f"HIPPOCAMPUS: Loaded {len(self._memory_store)} memories from long-term storage.")
+            else:
+                print("HIPPOCAMPUS: No prior long-term memories found. Starting fresh.")
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"HIPPOCAMPUS_WARNING: Could not load long-term memories: {e}. Starting with a fresh memory.")
+            self._memory_store = {}
+
+    def _save_memories(self):
+        """Saves the current in-memory store to the JSON file."""
+        try:
+            with open(self.memory_file, 'w') as f:
+                json.dump(self._memory_store, f, indent=4)
+        except IOError as e:
+            print(f"HIPPOCAMPUS_ERROR: Could not save long-term memories: {e}")
+
+    def store_memory(self, key: str, value: any):
+        """Encodes a new piece of information and saves it to long-term memory."""
+        print(f"HIPPOCAMPUS: Encoding new memory -> '{key}': '{value}'")
+        self._memory_store[key] = value
+        self._save_memories()
+
+    def retrieve_memory(self, key: str) -> any:
+        """Retrieves a memory based on a specific cue from the in-memory store."""
+        print(f"HIPPOCAMPUS: Attempting to retrieve memory for '{key}'.")
+        return self._memory_store.get(key)
+
+    def get_all_memories(self) -> dict:
+        """Returns all memories for reflective processes."""
+        return self._memory_store
+
+
+class Cortex:
+    """
+    The primary processing unit, representing the cerebral cortex. It's structured
+    into six layers of abstraction to handle complex cognitive tasks using a local LLM agent.
+    """
+    def __init__(self, brain: Brain):
+        self.brain = brain
+        self.agent = LLMAgent(model="llama3")
+        print("CORTEX: 6-layer processing architecture is ready, powered by local LLM agent.")
+
+    def process_new_input(self, data: any):
+        """
+        Processes incoming data through the six-layer pipeline.
+        """
+        print(f"CORTEX: Processing input '{data}' through 6 layers of LLM-powered cognition.")
+        # Layer 1: Ingest New Data
+        ingested_data = self._layer1_ingest(data)
+        # Layer 2: Comparison
+        compared_data = self._layer2_compare(ingested_data)
+        # Layer 3: High-Level Contextualization
+        contextualized_data = self._layer3_contextualize(compared_data)
+        # Layer 4: Decide
+        decision = self._layer4_decide(contextualized_data)
+        # Layer 5: Recommend
+        recommendation = self._layer5_recommend(decision)
+        # Layer 6: Formulate Action
+        action = self._layer6_formulate_action(recommendation)
+        
+        print(f"CORTEX: Final Action -> {action}")
+        return action
+
+    def _layer1_ingest(self, data: any) -> dict:
+        """Layer 1: Ingests raw data and queries memory for related information."""
+        print("  L1 (Ingest): Receiving raw data and querying hippocampus.")
+        related_memory = self.brain.hippocampus.retrieve_memory(data)
+        return {'raw_data': data, 'related_memory': related_memory}
+
+    def _layer2_compare(self, ingested_data: dict) -> dict:
+        """Layer 2: Compares new data with retrieved memories using an LLM agent."""
+        print("  L2 (Compare): Comparing data with past experiences via LLM.")
+        raw_data = ingested_data['raw_data']
+        memory = ingested_data['related_memory']
+
+        if memory:
+            prompt = f"Task: Analyze and compare. A new stimulus is '{raw_data}'. A related memory is '{memory}'. Is the new stimulus novel or familiar? Briefly explain why in one sentence."
+        else:
+            prompt = f"Task: Analyze. A new stimulus is '{raw_data}'. No related memory was found. Is this stimulus novel? Briefly explain why in one sentence."
+
+        analysis = self.agent.generate(prompt)
+        print(f"    -> LLM Analysis: {analysis}")
+        ingested_data['analysis'] = analysis
+
+        if not memory:
+            self.brain.hippocampus.store_memory(raw_data, f"Encountered this stimulus. First analysis: {analysis}")
+            
+        return ingested_data
+
+    def _layer3_contextualize(self, compared_data: dict) -> str:
+        """Layer 3: Applies high-level context and meaning using an LLM agent."""
+        print("  L3 (Contextualize): Placing data into a broader context via LLM.")
+        analysis = compared_data['analysis']
+        prompt = f"Task: Contextualize. Based on the analysis '{analysis}', what is the broader context or meaning of this event? Describe it in one concise sentence."
+        context = self.agent.generate(prompt)
+        print(f"    -> LLM Context: {context}")
+        return context
+
+    def _layer4_decide(self, context: str) -> str:
+        """Layer 4: Makes a decision based on the context using an LLM agent."""
+        print("  L4 (Decide): Making a judgment based on context via LLM.")
+        prompt = f"Task: Decide. The current context is: '{context}'. What is the most logical, single decision to make? State the decision as a short, imperative command (e.g., 'Investigate further', 'Remain calm', 'Ignore')."
+        decision = self.agent.generate(prompt)
+        print(f"    -> LLM Decision: {decision}")
+        return decision
+
+    def _layer5_recommend(self, decision: str) -> str:
+        """Layer 5: Generates potential actions or recommendations using an LLM agent."""
+        print("  L5 (Recommend): Formulating potential actions via LLM.")
+        prompt = f"Task: Recommend. The decision is: '{decision}'. What is a single, clear recommendation for action? State the recommendation as a concise sentence."
+        recommendation = self.agent.generate(prompt)
+        print(f"    -> LLM Recommendation: {recommendation}")
+        return recommendation
+
+    def _layer6_formulate_action(self, recommendation: str) -> str:
+        """Layer 6: Translates a recommendation into a concrete action using an LLM agent."""
+        print("  L6 (Action): Committing to a final, concrete action via LLM.")
+        prompt = f"Task: Formulate Action. The recommendation is: '{recommendation}'. Translate this into a final, concrete, simple action. State the action as a very short phrase (e.g., 'Focus on stimulus', 'No action needed')."
+        action = self.agent.generate(prompt)
+        print(f"    -> LLM Action: {action}")
+        return action
+
+
+if __name__ == '__main__':
+    # Instantiate the brain
+    human_brain = Brain()
+
+    # Process a novel stimulus
+    human_brain.process_stimulus("A bright, flashing light")
+
+    # Process the same stimulus again to see the memory effect
+    human_brain.process_stimulus("A bright, flashing light")
+
+    # Process a different stimulus
+    human_brain.process_stimulus("A familiar, calming sound")
+
+    # Trigger a reflection process
+    human_brain.reflect()
