@@ -3,11 +3,11 @@
 T-bot is a modern remake of a python AI project "thinkebot" made in 2021
 The original thinkerbot could analyze sentences using hardcoded parts of speech and grammar rules
 acquiring and storing word and phrase objects into objects and CSV files and develop 
-a semantical meaning and logically assemble them into new sentence objects 
+a semantical meaning using hardcoded scripting and logically assemble them into new sentence objects 
 
 ## Overview
 
-`T-bot 2025` is remake using a pipeline that combines LLM-based linguistic analysis with vector embeddings and lightweight mathematical reasoning. Because we are using Agent Ollama embeddings instead of hardcoded rules the logic system has more capability:
+`T-bot 2025` is remake using a pipeline that combines LLM-based linguistic analysis with vector embeddings and lightweight mathematical reasoning. Because we are using Agent Ollama embeddings instead of hardcoded rules the logic system has more autonomous capability:
 
 - Instead of a scripted realm of statements, it accepts any natural language input
 - Instead of loops and hardcoded grammar rules it extracts structured linguistic objects and explicit facts (including conditional implications)
