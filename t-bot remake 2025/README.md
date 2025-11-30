@@ -7,14 +7,14 @@ a semantical meaning and logically assemble them into new sentence objects
 
 ## Overview
 
-`T-bot 2025` is now a pipeline that combines LLM-based linguistic analysis with vector embeddings and lightweight mathematical reasoning. By using Agent Ollama, the system:
+`T-bot 2025` is remake using a pipeline that combines LLM-based linguistic analysis with vector embeddings and lightweight mathematical reasoning. Because we are using Agent Ollama embeddings instead of hardcoded rules the logic system has more capability:
 
 - Instead of a scripted realm of statements, it accepts any natural language input
 - Instead of loops and hardcoded grammar rules it extracts structured linguistic objects and explicit facts (including conditional implications)
 - Instead of CSV files it Generates embeddings for inputs and persists analyses into a local knowledge base (`tbot_analysis_data.json`)
 - More robustly applies semantic and logical reasoning (similarity checks, implication extraction, modus ponens/tollens)
 
-This repository contains the same concepts used in the original t-bot for building a semantic reasoning assistant except that using LLM it more capably bridges that barrier between natural-language structure with symbolic-style logic.
+This repository contains the same concepts used in the original t-bot for building a semantic reasoning assistant except that becuase we are using Ollama(LLM) t-bot 2025 more capably bridges that barrier between natural-language structure with symbolic-style logic.
 
 ## Quick Start
 
@@ -62,5 +62,6 @@ Included files to prepare this project for GitHub:
 - Add a basic `ci.yml` GitHub Actions workflow for lint/tests.
 - Initialize a local Git repository and make the first commit.
 - Add unit tests and a tiny test harness that mocks `ollama` calls.
+
 
 Tell me which of the above you want me to do next.
