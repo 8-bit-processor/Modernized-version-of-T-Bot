@@ -1,9 +1,12 @@
 # T-bot (remake 2025)
 
 T-bot is a modern remake of a python AI project "thinkebot" made in 2021
-The original thinkerbot could analyze sentences using hardcoded parts of speech and grammar rules
-acquiring and storing word and phrases using object oriented programming and CSV files developed 
-a semantical meaning using hardcoded scripting and logically assembled them into new sentence objects 
+
+*** This is Unfinished- I am not working on this now but I will come back someday to implement propositional logic and more ***
+
+The original thinkerbot used hardcoded parts of speech and grammar rules to develop semantical meaning 
+acquiring and storing word and phrases using object oriented programming and CSV files. With zero dependencies and could be
+run offline it used hardcoded scripting and logically assembled them into new sentence objects.  
 
 ## Overview
 
